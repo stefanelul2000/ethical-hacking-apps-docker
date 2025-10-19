@@ -23,18 +23,42 @@ fi
 
 cd "$APP_DIR"
 
+TARGET_BRANCH=""
+
 if [ -n "$REPO_BRANCH" ]; then
-  echo "Synchronizing branch ${REPO_BRANCH}..."
-  git fetch origin "$REPO_BRANCH"
-  git checkout -B "$REPO_BRANCH" "origin/${REPO_BRANCH}"
-  git reset --hard "origin/${REPO_BRANCH}"
-else
-  echo "Synchronizing default branch..."
-  git fetch origin
-  DEFAULT_BRANCH="$(git rev-parse --abbrev-ref origin/HEAD | sed 's#^.*/##')"
-  git checkout -B "$DEFAULT_BRANCH" "origin/${DEFAULT_BRANCH}"
-  git reset --hard "origin/${DEFAULT_BRANCH}"
+  if git ls-remote --exit-code --heads origin "$REPO_BRANCH" >/dev/null 2>&1; then
+    TARGET_BRANCH="$REPO_BRANCH"
+  else
+    echo "Requested branch '${REPO_BRANCH}' not found on remote, discovering default branch..."
+  fi
 fi
+
+if [ -z "$TARGET_BRANCH" ]; then
+  TARGET_BRANCH="$(git ls-remote --symref origin HEAD 2>/dev/null | awk '/^ref:/{sub(\"refs/heads/\",\"\",$2); print $2; exit}')"
+fi
+
+if [ -z "$TARGET_BRANCH" ]; then
+  echo "Falling back to 'main' branch"
+  TARGET_BRANCH="main"
+fi
+
+echo "Synchronizing branch ${TARGET_BRANCH}..."
+if ! git fetch origin "${TARGET_BRANCH}"; then
+  echo "Failed to fetch branch '${TARGET_BRANCH}', falling back to remote default..."
+  FALLBACK_BRANCH="$(git ls-remote --symref origin HEAD 2>/dev/null | awk '/^ref:/{sub(\"refs/heads/\",\"\",$2); print $2; exit}')"
+  if [ -z "$FALLBACK_BRANCH" ]; then
+    echo "Remote default branch unknown, falling back to 'master'..."
+    FALLBACK_BRANCH="master"
+  fi
+  TARGET_BRANCH="$FALLBACK_BRANCH"
+  if ! git fetch origin "${TARGET_BRANCH}"; then
+    echo "Unable to fetch branch '${TARGET_BRANCH}' from remote" >&2
+    exit 1
+  fi
+fi
+
+git checkout -B "${TARGET_BRANCH}" "origin/${TARGET_BRANCH}"
+git reset --hard "origin/${TARGET_BRANCH}"
 
 git clean -fdx
 
