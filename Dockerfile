@@ -1,5 +1,5 @@
 FROM python:3.10-slim
-LABEL maintainer="MonoLoGu"
+LABEL maintainer="stefanelul2000"
 
 ENV APP_DIR=/srv/app \
     UV_CACHE_DIR=/tmp/uv-cache \

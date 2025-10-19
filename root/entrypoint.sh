@@ -48,7 +48,12 @@ TARGET_BRANCH=""
 if [ ! -d "$APP_DIR/.git" ]; then
   TARGET_BRANCH="$(determine_target_branch "$REPO_URL" "$REPO_BRANCH")"
   echo "Cloning ${REPO_URL} (branch: ${TARGET_BRANCH}) into ${APP_DIR}..."
-  rm -rf "$APP_DIR"
+  if [ -d "$APP_DIR" ]; then
+    # Clear mount contents while keeping the directory for Docker volumes
+    find "$APP_DIR" -mindepth 1 -maxdepth 1 -exec rm -rf {} +
+  else
+    mkdir -p "$APP_DIR"
+  fi
   git clone --depth 1 --branch "$TARGET_BRANCH" "$REPO_URL" "$APP_DIR"
 else
   git config --global --add safe.directory "$APP_DIR" || true
