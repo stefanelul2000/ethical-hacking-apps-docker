@@ -86,8 +86,21 @@ jobs:
         run: |
           echo "Testing image ${TEST_TAG}"
           CONTAINER_ID=$(docker run -d --rm -p 8000:8000 "${TEST_TAG}")
-          trap "docker logs ${CONTAINER_ID}; docker stop ${CONTAINER_ID}" EXIT
-          curl --retry 15 --retry-delay 2 --retry-connrefused http://127.0.0.1:8000/health
+          cleanup() { docker logs "${CONTAINER_ID}" || true; docker stop "${CONTAINER_ID}" || true; }
+          trap cleanup EXIT
+          echo "Waiting for application startup..."
+          for attempt in $(seq 1 20); do
+            if docker logs "${CONTAINER_ID}" 2>&1 | grep -q "Application startup complete"; then
+              break
+            fi
+            sleep 2
+          done
+          if ! docker logs "${CONTAINER_ID}" 2>&1 | grep -q "Application startup complete"; then
+            echo "Service failed to signal readiness" >&2
+            exit 1
+          fi
+          sleep 2
+          curl --retry 10 --retry-delay 2 --retry-all-errors http://127.0.0.1:8000/health
           docker stop "${CONTAINER_ID}"
           trap - EXIT
 
