@@ -3,7 +3,7 @@ set -eu
 
 APP_DIR="${APP_DIR:-/srv/app}"
 REPO_URL="${REPO_URL:-https://github.com/stefanelul2000/ethical-hacking-apps.git}"
-REPO_BRANCH="${REPO_BRANCH:-main}"
+REPO_BRANCH="${REPO_BRANCH:-master}"
 PROJECT_SUBDIR="${PROJECT_SUBDIR:-rest-api}"
 
 mkdir -p "$(dirname "$APP_DIR")"
