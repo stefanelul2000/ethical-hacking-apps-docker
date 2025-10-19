@@ -85,23 +85,39 @@ jobs:
           TEST_TAG: ${{ steps.test-tag.outputs.tag }}
         run: |
           echo "Testing image ${TEST_TAG}"
-          CONTAINER_ID=$(docker run -d --rm -p 8000:8000 "${TEST_TAG}")
-          cleanup() { docker logs "${CONTAINER_ID}" || true; docker stop "${CONTAINER_ID}" || true; }
+          CONTAINER_ID=$(docker run -d -p 8000:8000 "${TEST_TAG}")
+          echo "Started container ${CONTAINER_ID}"
+          cleanup() {
+            if [ -n "${CONTAINER_ID}" ] && docker ps -a -q -f "id=${CONTAINER_ID}" >/dev/null 2>&1; then
+              docker logs "${CONTAINER_ID}" || true
+              docker rm -f "${CONTAINER_ID}" >/dev/null 2>&1 || true
+            fi
+          }
           trap cleanup EXIT
-          echo "Waiting for application startup..."
+
+          SUCCESS=0
           for attempt in $(seq 1 20); do
-            if docker logs "${CONTAINER_ID}" 2>&1 | grep -q "Application startup complete"; then
+            if ! docker ps -q -f "id=${CONTAINER_ID}" >/dev/null 2>&1; then
+              echo "Container exited unexpectedly before readiness check" >&2
+              cleanup
+              exit 1
+            fi
+            if curl --silent --fail --max-time 5 http://127.0.0.1:8000/health > /tmp/health.json; then
+              cat /tmp/health.json
+              SUCCESS=1
               break
             fi
-            sleep 2
+            echo "Health check not ready yet (attempt ${attempt}/20) ..."
+            sleep 3
           done
-          if ! docker logs "${CONTAINER_ID}" 2>&1 | grep -q "Application startup complete"; then
-            echo "Service failed to signal readiness" >&2
+
+          if [ "${SUCCESS}" -ne 1 ]; then
+            echo "Service failed to respond to health check" >&2
+            cleanup
             exit 1
           fi
-          sleep 2
-          curl --retry 10 --retry-delay 2 --retry-all-errors http://127.0.0.1:8000/health
-          docker stop "${CONTAINER_ID}"
+
+          docker stop "${CONTAINER_ID}" >/dev/null 2>&1 || true
           trap - EXIT
 
       - name: Build and push Docker image
@@ -126,3 +142,4 @@ jobs:
         # This step uses the identity token to provision an ephemeral certificate
         # against the sigstore community Fulcio instance.
         run: echo "${TAGS}" | xargs -I {} cosign sign --yes {}@${DIGEST}
+
