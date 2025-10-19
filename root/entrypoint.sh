@@ -6,61 +6,76 @@ REPO_URL="${REPO_URL:-https://github.com/stefanelul2000/ethical-hacking-apps.git
 REPO_BRANCH="${REPO_BRANCH:-main}"
 PROJECT_SUBDIR="${PROJECT_SUBDIR:-rest-api}"
 
-mkdir -p "$APP_DIR"
+mkdir -p "$(dirname "$APP_DIR")"
+
+determine_target_branch() {
+  remote_url="$1"
+  requested_branch="$2"
+  branch=""
+
+  if [ -n "$requested_branch" ]; then
+    if git ls-remote --exit-code --heads "$remote_url" "$requested_branch" >/dev/null 2>&1; then
+      branch="$requested_branch"
+    else
+      echo "Requested branch '${requested_branch}' not found on remote ${remote_url}. Falling back to the remote default." >&2
+    fi
+  fi
+
+  if [ -z "$branch" ]; then
+    branch="$(git ls-remote --symref "$remote_url" HEAD 2>/dev/null | awk '/^ref:/{sub(\"refs/heads/\",\"\",$2); print $2; exit}')"
+  fi
+
+  if [ -z "$branch" ]; then
+    if git ls-remote --exit-code --heads "$remote_url" main >/dev/null 2>&1; then
+      branch="main"
+    elif git ls-remote --exit-code --heads "$remote_url" master >/dev/null 2>&1; then
+      branch="master"
+    else
+      branch="$(git ls-remote "$remote_url" 2>/dev/null | awk '/refs\/heads\//{sub(\"refs/heads/\",\"\",$2); print $2; exit}')"
+    fi
+  fi
+
+  if [ -z "$branch" ]; then
+    echo "Unable to determine a branch to checkout from ${remote_url}" >&2
+    exit 1
+  fi
+
+  echo "$branch"
+}
+
+TARGET_BRANCH=""
 
 if [ ! -d "$APP_DIR/.git" ]; then
-  echo "Bootstrapping git repository in ${APP_DIR}..."
-  git init "$APP_DIR"
+  TARGET_BRANCH="$(determine_target_branch "$REPO_URL" "$REPO_BRANCH")"
+  echo "Cloning ${REPO_URL} (branch: ${TARGET_BRANCH}) into ${APP_DIR}..."
+  rm -rf "$APP_DIR"
+  git clone --depth 1 --branch "$TARGET_BRANCH" "$REPO_URL" "$APP_DIR"
+else
+  git config --global --add safe.directory "$APP_DIR" || true
+
+  if git -C "$APP_DIR" remote get-url origin >/dev/null 2>&1; then
+    git -C "$APP_DIR" remote set-url origin "$REPO_URL"
+  else
+    git -C "$APP_DIR" remote add origin "$REPO_URL"
+  fi
+
+  REMOTE_URL="$(git -C "$APP_DIR" remote get-url origin)"
+  TARGET_BRANCH="$(determine_target_branch "$REMOTE_URL" "$REPO_BRANCH")"
+
+  echo "Synchronizing branch ${TARGET_BRANCH}..."
+  if ! git -C "$APP_DIR" fetch origin "${TARGET_BRANCH}"; then
+    echo "Unable to fetch branch '${TARGET_BRANCH}' from remote ${REMOTE_URL}" >&2
+    exit 1
+  fi
+
+  git -C "$APP_DIR" checkout -B "${TARGET_BRANCH}" "origin/${TARGET_BRANCH}"
+  git -C "$APP_DIR" reset --hard "origin/${TARGET_BRANCH}"
+  git -C "$APP_DIR" clean -fdx
 fi
 
 git config --global --add safe.directory "$APP_DIR" || true
 
-if git -C "$APP_DIR" remote get-url origin >/dev/null 2>&1; then
-  git -C "$APP_DIR" remote set-url origin "$REPO_URL"
-else
-  git -C "$APP_DIR" remote add origin "$REPO_URL"
-fi
-
 cd "$APP_DIR"
-
-TARGET_BRANCH=""
-
-if [ -n "$REPO_BRANCH" ]; then
-  if git ls-remote --exit-code --heads origin "$REPO_BRANCH" >/dev/null 2>&1; then
-    TARGET_BRANCH="$REPO_BRANCH"
-  else
-    echo "Requested branch '${REPO_BRANCH}' not found on remote, discovering default branch..."
-  fi
-fi
-
-if [ -z "$TARGET_BRANCH" ]; then
-  TARGET_BRANCH="$(git ls-remote --symref origin HEAD 2>/dev/null | awk '/^ref:/{sub(\"refs/heads/\",\"\",$2); print $2; exit}')"
-fi
-
-if [ -z "$TARGET_BRANCH" ]; then
-  echo "Falling back to 'main' branch"
-  TARGET_BRANCH="main"
-fi
-
-echo "Synchronizing branch ${TARGET_BRANCH}..."
-if ! git fetch origin "${TARGET_BRANCH}"; then
-  echo "Failed to fetch branch '${TARGET_BRANCH}', falling back to remote default..."
-  FALLBACK_BRANCH="$(git ls-remote --symref origin HEAD 2>/dev/null | awk '/^ref:/{sub(\"refs/heads/\",\"\",$2); print $2; exit}')"
-  if [ -z "$FALLBACK_BRANCH" ]; then
-    echo "Remote default branch unknown, falling back to 'master'..."
-    FALLBACK_BRANCH="master"
-  fi
-  TARGET_BRANCH="$FALLBACK_BRANCH"
-  if ! git fetch origin "${TARGET_BRANCH}"; then
-    echo "Unable to fetch branch '${TARGET_BRANCH}' from remote" >&2
-    exit 1
-  fi
-fi
-
-git checkout -B "${TARGET_BRANCH}" "origin/${TARGET_BRANCH}"
-git reset --hard "origin/${TARGET_BRANCH}"
-
-git clean -fdx
 
 if [ -n "$PROJECT_SUBDIR" ]; then
   PROJECT_DIR="${APP_DIR%/}/${PROJECT_SUBDIR#/}"
