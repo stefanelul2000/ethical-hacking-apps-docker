@@ -111,7 +111,13 @@ jobs:
         if: matrix.build.healthcheck
         id: test-tag
         run: |
-          echo "tag=$(printf '%s\n' '${{ steps.meta.outputs.tags }}' | head -n 1)" >> "$GITHUB_OUTPUT"
+          wanted="${{ matrix.build.image_tag }}"
+          match=$(printf '%s\n' '${{ steps.meta.outputs.tags }}' | grep -m1 ":${wanted}$")
+          if [ -z "$match" ]; then
+            echo "Failed to find tag :${wanted}" >&2
+            exit 1
+          fi
+          echo "tag=$match" >> "$GITHUB_OUTPUT"
 
       - name: Smoke test container
         if: matrix.build.healthcheck
