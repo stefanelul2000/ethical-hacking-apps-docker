@@ -114,7 +114,7 @@ elif [ -f "requirements.txt" ]; then
   uv pip install --python "$PY_SPEC" -r requirements.txt
 fi
 
-UVICORN_APP="${UVICORN_APP:-a:app}"
+UVICORN_APP="${UVICORN_APP:-main:app}"
 UVICORN_HOST="${UVICORN_HOST:-0.0.0.0}"
 UVICORN_PORT="${UVICORN_PORT:-8000}"
 UVICORN_RELOAD="${UVICORN_RELOAD:-1}"
