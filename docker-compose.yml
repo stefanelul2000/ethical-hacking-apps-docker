@@ -6,6 +6,7 @@ services:
     container_name: ethical-hacking-rest-api-prod
     restart: unless-stopped
     environment:
+      SERVICE_VARIANT: rest-api
       REPO_URL: https://github.com/stefanelul2000/ethical-hacking-apps.git
       REPO_BRANCH: master
       PROJECT_SUBDIR: rest-api
@@ -27,6 +28,7 @@ services:
     container_name: ethical-hacking-mcp-client-prod
     restart: unless-stopped
     environment:
+      SERVICE_VARIANT: mcp-client
       REPO_URL: https://github.com/stefanelul2000/ethical-hacking-apps.git
       REPO_BRANCH: master
       PROJECT_SUBDIR: ai/agents
@@ -45,6 +47,7 @@ services:
     container_name: ethical-hacking-mcp-client-dev
     restart: unless-stopped
     environment:
+      SERVICE_VARIANT: mcp-client
       REPO_URL: https://github.com/stefanelul2000/ethical-hacking-apps.git
       REPO_BRANCH: arh
       PROJECT_SUBDIR: ai/agents
@@ -63,6 +66,7 @@ services:
     container_name: ethical-hacking-mcp-server-prod
     restart: unless-stopped
     environment:
+      SERVICE_VARIANT: mcp-server
       REPO_URL: https://github.com/stefanelul2000/ethical-hacking-apps.git
       REPO_BRANCH: master
       PROJECT_SUBDIR: ai/agents
@@ -78,6 +82,7 @@ services:
     container_name: ethical-hacking-mcp-server-dev
     restart: unless-stopped
     environment:
+      SERVICE_VARIANT: mcp-server
       REPO_URL: https://github.com/stefanelul2000/ethical-hacking-apps.git
       REPO_BRANCH: arh
       PROJECT_SUBDIR: ai/agents

@@ -29,21 +29,21 @@ jobs:
             exposed_port: 8000
             health_path: /health
             healthcheck: true
-            smoke_env: ""
+            smoke_env: "-e SERVICE_VARIANT=rest-api"
           - image_tag: ai-mcp-client-master
             extra_tag: ""
             repo_branch: master
             exposed_port: 8000
             health_path: /health
             healthcheck: true
-            smoke_env: "-e MCP_ADMIN_USER=ci -e MCP_ADMIN_PASS=ci -e GROQ_MODEL=llama-3.1-8b-instruct -e GROQ_API_KEY=dummy"
+            smoke_env: "-e SERVICE_VARIANT=mcp-client -e MCP_ADMIN_USER=ci -e MCP_ADMIN_PASS=ci -e GROQ_MODEL=llama-3.1-8b-instruct -e GROQ_API_KEY=dummy"
           - image_tag: ai-mcp-client-arh
             extra_tag: ""
             repo_branch: arh
             exposed_port: 8000
             health_path: /health
             healthcheck: true
-            smoke_env: "-e MCP_ADMIN_USER=ci -e MCP_ADMIN_PASS=ci -e GROQ_MODEL=llama-3.1-8b-instruct -e GROQ_API_KEY=dummy"
+            smoke_env: "-e SERVICE_VARIANT=mcp-client -e MCP_ADMIN_USER=ci -e MCP_ADMIN_PASS=ci -e GROQ_MODEL=llama-3.1-8b-instruct -e GROQ_API_KEY=dummy"
           - image_tag: ai-mcp-server-master
             extra_tag: ""
             repo_branch: master

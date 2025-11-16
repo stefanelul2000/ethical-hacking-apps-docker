@@ -4,7 +4,31 @@ set -eu
 APP_DIR="${APP_DIR:-/srv/app}"
 REPO_URL="${REPO_URL:-https://github.com/stefanelul2000/ethical-hacking-apps.git}"
 REPO_BRANCH="${REPO_BRANCH:-master}"
-PROJECT_SUBDIR="${PROJECT_SUBDIR:-rest-api}"
+SERVICE_VARIANT="${SERVICE_VARIANT:-rest-api}"
+
+case "$SERVICE_VARIANT" in
+  rest-api)
+    DEFAULT_PROJECT_SUBDIR="rest-api"
+    DEFAULT_RUN_MODE="uvicorn"
+    DEFAULT_UVICORN_APP="main:app"
+    ;;
+  mcp-client)
+    DEFAULT_PROJECT_SUBDIR="ai"
+    DEFAULT_RUN_MODE="uvicorn"
+    DEFAULT_UVICORN_APP="agents.mcp_client:app"
+    ;;
+  mcp-server)
+    DEFAULT_PROJECT_SUBDIR="ai"
+    DEFAULT_RUN_MODE="mcp-server"
+    DEFAULT_UVICORN_APP=""
+    ;;
+  *)
+    echo "Unknown SERVICE_VARIANT '${SERVICE_VARIANT}'" >&2
+    exit 1
+    ;;
+esac
+
+PROJECT_SUBDIR="${PROJECT_SUBDIR:-$DEFAULT_PROJECT_SUBDIR}"
 
 mkdir -p "$(dirname "$APP_DIR")"
 
@@ -114,14 +138,37 @@ elif [ -f "requirements.txt" ]; then
   uv pip install --python "$PY_SPEC" -r requirements.txt
 fi
 
-UVICORN_APP="${UVICORN_APP:-main:app}"
-UVICORN_HOST="${UVICORN_HOST:-0.0.0.0}"
-UVICORN_PORT="${UVICORN_PORT:-8000}"
-UVICORN_RELOAD="${UVICORN_RELOAD:-1}"
+if [ "$DEFAULT_RUN_MODE" = "mcp-server" ]; then
+  MCP_SERVER_TRANSPORT="${MCP_SERVER_TRANSPORT:-http}"
+  MCP_SERVER_HOST="${MCP_SERVER_HOST:-0.0.0.0}"
+  MCP_SERVER_PORT="${MCP_SERVER_PORT:-8001}"
 
-set -- uv run --python "$PY_SPEC" uvicorn "$UVICORN_APP" --host "$UVICORN_HOST" --port "$UVICORN_PORT"
-if [ "$UVICORN_RELOAD" != "0" ]; then
-  set -- "$@" --reload
+  cat <<'PY' >/tmp/run_mcp_server.py
+import os
+from agents.mcp_server import mcp
+
+transport = os.getenv("MCP_SERVER_TRANSPORT", "http")
+host = os.getenv("MCP_SERVER_HOST", "0.0.0.0")
+port = int(os.getenv("MCP_SERVER_PORT", "8001"))
+
+mcp.run(transport=transport, host=host, port=port)
+PY
+
+  exec env \
+    MCP_SERVER_TRANSPORT="$MCP_SERVER_TRANSPORT" \
+    MCP_SERVER_HOST="$MCP_SERVER_HOST" \
+    MCP_SERVER_PORT="$MCP_SERVER_PORT" \
+    uv run --python "$PY_SPEC" python /tmp/run_mcp_server.py
+else
+  UVICORN_APP="${UVICORN_APP:-$DEFAULT_UVICORN_APP}"
+  UVICORN_HOST="${UVICORN_HOST:-0.0.0.0}"
+  UVICORN_PORT="${UVICORN_PORT:-8000}"
+  UVICORN_RELOAD="${UVICORN_RELOAD:-1}"
+
+  set -- uv run --python "$PY_SPEC" uvicorn "$UVICORN_APP" --host "$UVICORN_HOST" --port "$UVICORN_PORT"
+  if [ "$UVICORN_RELOAD" != "0" ]; then
+    set -- "$@" --reload
+  fi
+
+  exec "$@"
 fi
-
-exec "$@"
