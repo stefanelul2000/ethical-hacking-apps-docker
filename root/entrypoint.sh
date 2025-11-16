@@ -3,7 +3,11 @@ set -eu
 
 APP_DIR="${APP_DIR:-/srv/app}"
 REPO_URL="${REPO_URL:-https://github.com/stefanelul2000/ethical-hacking-apps.git}"
-REPO_BRANCH="${REPO_BRANCH:-master}"
+if [ "${SERVICE_VARIANT}" = "mcp-server" ]; then
+  REPO_BRANCH="${REPO_BRANCH:-arh}"
+else
+  REPO_BRANCH="${REPO_BRANCH:-master}"
+fi
 SERVICE_VARIANT="${SERVICE_VARIANT:-rest-api}"
 
 case "$SERVICE_VARIANT" in
