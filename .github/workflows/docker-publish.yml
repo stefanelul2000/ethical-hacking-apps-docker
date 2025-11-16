@@ -27,6 +27,7 @@ jobs:
             exposed_port: 8000
             health_path: /health
             healthcheck: true
+            smoke_env: ""
     steps: &build-steps
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -86,9 +87,10 @@ jobs:
           TEST_TAG: ${{ steps.test-tag.outputs.tag }}
           TEST_PORT: ${{ matrix.build.exposed_port }}
           HEALTH_PATH: ${{ matrix.build.health_path }}
+          RUN_EXTRA_ENV: ${{ matrix.build.smoke_env }}
         run: |
           echo "Testing image ${TEST_TAG} on port ${TEST_PORT}"
-          CONTAINER_ID=$(docker run -d -p ${TEST_PORT}:${TEST_PORT} "${TEST_TAG}")
+          CONTAINER_ID=$(docker run -d -p ${TEST_PORT}:${TEST_PORT} ${RUN_EXTRA_ENV} "${TEST_TAG}")
           echo "Started container ${CONTAINER_ID}"
           cleanup() {
             if [ -n "${CONTAINER_ID}" ] && docker ps -a -q -f "id=${CONTAINER_ID}" >/dev/null 2>&1; then
@@ -160,11 +162,13 @@ jobs:
             exposed_port: 8000
             health_path: /health
             healthcheck: true
+            smoke_env: "-e MCP_ADMIN_USER=ci -e MCP_ADMIN_PASS=ci -e GROQ_MODEL=llama-3.1-8b-instruct -e GROQ_API_KEY=dummy"
           - image_tag: ai-mcp-client-arh
             repo_branch: arh
             exposed_port: 8000
             health_path: /health
             healthcheck: true
+            smoke_env: "-e MCP_ADMIN_USER=ci -e MCP_ADMIN_PASS=ci -e GROQ_MODEL=llama-3.1-8b-instruct -e GROQ_API_KEY=dummy"
     steps: *build-steps
 
   mcp-server:
@@ -182,9 +186,11 @@ jobs:
             exposed_port: 8001
             health_path: ""
             healthcheck: false
+            smoke_env: ""
           - image_tag: ai-mcp-server-arh
             repo_branch: arh
             exposed_port: 8001
             health_path: ""
             healthcheck: false
+            smoke_env: ""
     steps: *build-steps
