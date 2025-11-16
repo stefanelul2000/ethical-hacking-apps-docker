@@ -2,33 +2,64 @@ name: Docker
 
 on:
   push:
-    branches: [ "main", "ai-mcp-client", "ai-mcp-server" ]
+    branches: [ "main" ]
     tags: [ 'v*.*.*' ]
   pull_request:
-    branches: [ "main", "ai-mcp-client", "ai-mcp-server" ]
+    branches: [ "main" ]
+  workflow_dispatch:
 
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
 
 jobs:
-  rest-api:
-    if: github.ref_name == 'main'
+  build:
     runs-on: ubuntu-latest
     permissions:
       contents: read
       packages: write
       id-token: write
     strategy:
+      fail-fast: false
       matrix:
         build:
           - image_tag: latest
+            extra_tag: rest-api
             repo_branch: master
             exposed_port: 8000
             health_path: /health
             healthcheck: true
             smoke_env: ""
-    steps: &build-steps
+          - image_tag: ai-mcp-client-master
+            extra_tag: ""
+            repo_branch: master
+            exposed_port: 8000
+            health_path: /health
+            healthcheck: true
+            smoke_env: "-e MCP_ADMIN_USER=ci -e MCP_ADMIN_PASS=ci -e GROQ_MODEL=llama-3.1-8b-instruct -e GROQ_API_KEY=dummy"
+          - image_tag: ai-mcp-client-arh
+            extra_tag: ""
+            repo_branch: arh
+            exposed_port: 8000
+            health_path: /health
+            healthcheck: true
+            smoke_env: "-e MCP_ADMIN_USER=ci -e MCP_ADMIN_PASS=ci -e GROQ_MODEL=llama-3.1-8b-instruct -e GROQ_API_KEY=dummy"
+          - image_tag: ai-mcp-server-master
+            extra_tag: ""
+            repo_branch: master
+            exposed_port: 8001
+            health_path: ""
+            healthcheck: false
+            smoke_env: ""
+          - image_tag: ai-mcp-server-arh
+            extra_tag: ""
+            repo_branch: arh
+            exposed_port: 8001
+            health_path: ""
+            healthcheck: false
+            smoke_env: ""
+
+    steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
@@ -56,6 +87,7 @@ jobs:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
             type=raw,value=${{ matrix.build.image_tag }}
+            type=raw,value=${{ matrix.build.extra_tag }},enable=${{ matrix.build.extra_tag != '' }}
             type=ref,event=branch
             type=ref,event=pr
             type=semver,pattern={{version}}
@@ -146,51 +178,3 @@ jobs:
           TAGS: ${{ steps.meta.outputs.tags }}
           DIGEST: ${{ steps.build-and-push.outputs.digest }}
         run: echo "${TAGS}" | xargs -I {} cosign sign --yes {}@${DIGEST}
-
-  mcp-client:
-    if: github.ref_name == 'ai-mcp-client'
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
-      id-token: write
-    strategy:
-      matrix:
-        build:
-          - image_tag: ai-mcp-client-master
-            repo_branch: master
-            exposed_port: 8000
-            health_path: /health
-            healthcheck: true
-            smoke_env: "-e MCP_ADMIN_USER=ci -e MCP_ADMIN_PASS=ci -e GROQ_MODEL=llama-3.1-8b-instruct -e GROQ_API_KEY=dummy"
-          - image_tag: ai-mcp-client-arh
-            repo_branch: arh
-            exposed_port: 8000
-            health_path: /health
-            healthcheck: true
-            smoke_env: "-e MCP_ADMIN_USER=ci -e MCP_ADMIN_PASS=ci -e GROQ_MODEL=llama-3.1-8b-instruct -e GROQ_API_KEY=dummy"
-    steps: *build-steps
-
-  mcp-server:
-    if: github.ref_name == 'ai-mcp-server'
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
-      id-token: write
-    strategy:
-      matrix:
-        build:
-          - image_tag: ai-mcp-server-master
-            repo_branch: master
-            exposed_port: 8001
-            health_path: ""
-            healthcheck: false
-            smoke_env: ""
-          - image_tag: ai-mcp-server-arh
-            repo_branch: arh
-            exposed_port: 8001
-            health_path: ""
-            healthcheck: false
-            smoke_env: ""
-    steps: *build-steps
