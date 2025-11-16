@@ -2,12 +2,14 @@ FROM python:3.10-slim
 LABEL maintainer="stefanelul2000"
 
 ARG DEFAULT_REPO_BRANCH=master
+ARG DEFAULT_SERVICE_VARIANT=rest-api
 
 ENV APP_DIR=/srv/app \
     UV_CACHE_DIR=/tmp/uv-cache \
     PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
-    REPO_BRANCH=${DEFAULT_REPO_BRANCH}
+    REPO_BRANCH=${DEFAULT_REPO_BRANCH} \
+    SERVICE_VARIANT=${DEFAULT_SERVICE_VARIANT}
 
 RUN set -eux; \
     apt-get update; \

@@ -26,6 +26,7 @@ jobs:
           - image_tag: latest
             extra_tag: rest-api
             repo_branch: master
+            service_variant: rest-api
             exposed_port: 8000
             health_path: /health
             healthcheck: true
@@ -33,6 +34,7 @@ jobs:
           - image_tag: ai-mcp-client-master
             extra_tag: ""
             repo_branch: master
+            service_variant: mcp-client
             exposed_port: 8000
             health_path: /health
             healthcheck: true
@@ -40,6 +42,7 @@ jobs:
           - image_tag: ai-mcp-client-arh
             extra_tag: ""
             repo_branch: arh
+            service_variant: mcp-client
             exposed_port: 8000
             health_path: /health
             healthcheck: true
@@ -47,6 +50,7 @@ jobs:
           - image_tag: ai-mcp-server-master
             extra_tag: ""
             repo_branch: master
+            service_variant: mcp-server
             exposed_port: 8001
             health_path: ""
             healthcheck: false
@@ -54,6 +58,7 @@ jobs:
           - image_tag: ai-mcp-server-arh
             extra_tag: ""
             repo_branch: arh
+            service_variant: mcp-server
             exposed_port: 8001
             health_path: ""
             healthcheck: false
@@ -104,6 +109,7 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
             DEFAULT_REPO_BRANCH=${{ matrix.build.repo_branch }}
+            DEFAULT_SERVICE_VARIANT=${{ matrix.build.service_variant }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -175,6 +181,7 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
             DEFAULT_REPO_BRANCH=${{ matrix.build.repo_branch }}
+            DEFAULT_SERVICE_VARIANT=${{ matrix.build.service_variant }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
