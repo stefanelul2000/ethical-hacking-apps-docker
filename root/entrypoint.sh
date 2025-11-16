@@ -142,34 +142,25 @@ elif [ -f "requirements.txt" ]; then
   uv pip install --python "$PY_SPEC" -r requirements.txt
 fi
 
+. ".venv/bin/activate"
+
 if [ "$DEFAULT_RUN_MODE" = "mcp-server" ]; then
   MCP_SERVER_TRANSPORT="${MCP_SERVER_TRANSPORT:-http}"
   MCP_SERVER_HOST="${MCP_SERVER_HOST:-0.0.0.0}"
   MCP_SERVER_PORT="${MCP_SERVER_PORT:-8001}"
 
-  cat <<'PY' >/tmp/run_mcp_server.py
-import os
-from agents.mcp_server import mcp
-
-transport = os.getenv("MCP_SERVER_TRANSPORT", "http")
-host = os.getenv("MCP_SERVER_HOST", "0.0.0.0")
-port = int(os.getenv("MCP_SERVER_PORT", "8001"))
-
-mcp.run(transport=transport, host=host, port=port)
-PY
-
   exec env \
     MCP_SERVER_TRANSPORT="$MCP_SERVER_TRANSPORT" \
     MCP_SERVER_HOST="$MCP_SERVER_HOST" \
     MCP_SERVER_PORT="$MCP_SERVER_PORT" \
-    uv run --python "$PY_SPEC" python /tmp/run_mcp_server.py
+    python agents/mcp_server.py
 else
   UVICORN_APP="${UVICORN_APP:-$DEFAULT_UVICORN_APP}"
   UVICORN_HOST="${UVICORN_HOST:-0.0.0.0}"
   UVICORN_PORT="${UVICORN_PORT:-8000}"
   UVICORN_RELOAD="${UVICORN_RELOAD:-1}"
 
-  set -- uv run --python "$PY_SPEC" uvicorn "$UVICORN_APP" --host "$UVICORN_HOST" --port "$UVICORN_PORT"
+  set -- uvicorn "$UVICORN_APP" --host "$UVICORN_HOST" --port "$UVICORN_PORT"
   if [ "$UVICORN_RELOAD" != "0" ]; then
     set -- "$@" --reload
   fi
