@@ -7,10 +7,10 @@ name: Docker
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "main", "ai-mcp-client", "ai-mcp-server" ]
     tags: [ 'v*.*.*' ]
   pull_request:
-    branches: [ "main" ]
+    branches: [ "main", "ai-mcp-client", "ai-mcp-server" ]
 
 env:
   # Use docker.io for Docker Hub if empty
@@ -21,6 +21,42 @@ env:
 
 jobs:
   build:
+
+    strategy:
+      matrix:
+        build:
+          - trigger: main
+            image_tag: latest
+            repo_branch: master
+            exposed_port: 8000
+            health_path: /health
+            healthcheck: true
+          - trigger: ai-mcp-client
+            image_tag: ai-mcp-client-master
+            repo_branch: master
+            exposed_port: 8000
+            health_path: /health
+            healthcheck: true
+          - trigger: ai-mcp-client
+            image_tag: ai-mcp-client-arh
+            repo_branch: arh
+            exposed_port: 8000
+            health_path: /health
+            healthcheck: true
+          - trigger: ai-mcp-server
+            image_tag: ai-mcp-server-master
+            repo_branch: master
+            exposed_port: 8001
+            health_path: ""
+            healthcheck: false
+          - trigger: ai-mcp-server
+            image_tag: ai-mcp-server-arh
+            repo_branch: arh
+            exposed_port: 8001
+            health_path: ""
+            healthcheck: false
+
+    if: github.ref_name == matrix.build.trigger
 
     runs-on: ubuntu-latest
     permissions:
@@ -57,10 +93,10 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
+            type=raw,value=${{ matrix.build.image_tag }}
             type=ref,event=branch
             type=ref,event=pr
             type=semver,pattern={{version}}
-            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
 
       - name: Build Docker image (local)
         id: build-local
@@ -72,6 +108,8 @@ jobs:
           pull: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            DEFAULT_REPO_BRANCH=${{ matrix.build.repo_branch }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -81,11 +119,14 @@ jobs:
           echo "tag=$(printf '%s\n' '${{ steps.meta.outputs.tags }}' | head -n 1)" >> "$GITHUB_OUTPUT"
 
       - name: Smoke test container
+        if: matrix.build.healthcheck
         env:
           TEST_TAG: ${{ steps.test-tag.outputs.tag }}
+          TEST_PORT: ${{ matrix.build.exposed_port }}
+          HEALTH_PATH: ${{ matrix.build.health_path }}
         run: |
-          echo "Testing image ${TEST_TAG}"
-          CONTAINER_ID=$(docker run -d -p 8000:8000 "${TEST_TAG}")
+          echo "Testing image ${TEST_TAG} on port ${TEST_PORT}"
+          CONTAINER_ID=$(docker run -d -p ${TEST_PORT}:${TEST_PORT} "${TEST_TAG}")
           echo "Started container ${CONTAINER_ID}"
           cleanup() {
             if [ -n "${CONTAINER_ID}" ] && docker ps -a -q -f "id=${CONTAINER_ID}" >/dev/null 2>&1; then
@@ -102,7 +143,7 @@ jobs:
               cleanup
               exit 1
             fi
-            if curl --silent --fail --max-time 5 http://127.0.0.1:8000/health > /tmp/health.json; then
+            if curl --silent --fail --max-time 5 "http://127.0.0.1:${TEST_PORT}${HEALTH_PATH}" > /tmp/health.json; then
               cat /tmp/health.json
               SUCCESS=1
               break
@@ -130,6 +171,8 @@ jobs:
           pull: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            DEFAULT_REPO_BRANCH=${{ matrix.build.repo_branch }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -142,4 +185,3 @@ jobs:
         # This step uses the identity token to provision an ephemeral certificate
         # against the sigstore community Fulcio instance.
         run: echo "${TAGS}" | xargs -I {} cosign sign --yes {}@${DIGEST}
-

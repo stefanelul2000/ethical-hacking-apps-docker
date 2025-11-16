@@ -1,10 +1,13 @@
 FROM python:3.10-slim
 LABEL maintainer="stefanelul2000"
 
+ARG DEFAULT_REPO_BRANCH=master
+
 ENV APP_DIR=/srv/app \
     UV_CACHE_DIR=/tmp/uv-cache \
     PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONUNBUFFERED=1
+    PYTHONUNBUFFERED=1 \
+    REPO_BRANCH=${DEFAULT_REPO_BRANCH}
 
 RUN set -eux; \
     apt-get update; \
