@@ -19,7 +19,7 @@ The provided `docker-compose.yml` spins up five services:
 
 - `rest-api` – production image of the REST API (port 8000).
 - `ai-mcp-client-master` / `ai-mcp-client-arh` – MCP client on `master` and `arh`.
-- `ai-mcp-server-master` / `ai-mcp-server-arh` – MCP server variants.
+- `ai-mcp-server-master` / `ai-mcp-server-arh` – MCP server variants (the dev service sets `REPO_BRANCH=arh` explicitly).
 
 Environment variables set in the compose file ensure the entrypoint runs the
 correct variant. Update secrets such as `GROQ_API_KEY`, `MCP_ADMIN_*`, and the
@@ -28,6 +28,9 @@ upload credentials before running:
 ```bash
 docker compose up -d
 ```
+
+Refer to `docker-compose.yml` for the exact environment variables used in each
+service and adjust them for your deployment.
 
 If you prefer to run a single container manually:
 
