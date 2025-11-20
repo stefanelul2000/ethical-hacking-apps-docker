@@ -63,6 +63,14 @@ jobs:
             health_path: ""
             healthcheck: false
             smoke_env: ""
+          - image_tag: iris
+            extra_tag: ""
+            repo_branch: master
+            service_variant: iris
+            exposed_port: 8001
+            health_path: "/"
+            healthcheck: true
+            smoke_env: ""
 
     steps:
       - name: Checkout repository

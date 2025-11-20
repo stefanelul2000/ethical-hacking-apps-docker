@@ -22,6 +22,11 @@ case "$SERVICE_VARIANT" in
     DEFAULT_RUN_MODE="mcp-server"
     DEFAULT_UVICORN_APP=""
     ;;
+  iris)
+    DEFAULT_PROJECT_SUBDIR="ai/iris"
+    DEFAULT_RUN_MODE="uvicorn"
+    DEFAULT_UVICORN_APP="iris:iris"
+    ;;
   *)
     echo "Unknown SERVICE_VARIANT '${SERVICE_VARIANT}'" >&2
     exit 1
@@ -136,6 +141,9 @@ if [ -f "uv.lock" ] || [ -f "pyproject.toml" ]; then
 elif [ -f "requirements.txt" ]; then
   uv venv --python "$PY_SPEC"
   uv pip install --python "$PY_SPEC" -r requirements.txt
+elif [ -f "${APP_DIR}/requirements.txt" ]; then
+  uv venv --python "$PY_SPEC"
+  uv pip install --python "$PY_SPEC" -r "${APP_DIR}/requirements.txt"
 fi
 
 . ".venv/bin/activate"
