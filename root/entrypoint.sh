@@ -23,7 +23,8 @@ case "$SERVICE_VARIANT" in
     DEFAULT_UVICORN_APP=""
     ;;
   iris)
-    DEFAULT_PROJECT_SUBDIR="ai/iris"
+    DEFAULT_PROJECT_SUBDIR="ai"
+    DEFAULT_WORKDIR_OVERRIDE="${APP_DIR%/}/ai/iris"
     DEFAULT_RUN_MODE="uvicorn"
     DEFAULT_UVICORN_APP="iris:iris"
     ;;
@@ -34,6 +35,7 @@ case "$SERVICE_VARIANT" in
 esac
 
 PROJECT_SUBDIR="${PROJECT_SUBDIR:-$DEFAULT_PROJECT_SUBDIR}"
+WORKDIR_OVERRIDE="${WORKDIR_OVERRIDE:-${DEFAULT_WORKDIR_OVERRIDE:-}}"
 
 mkdir -p "$(dirname "$APP_DIR")"
 
@@ -167,6 +169,9 @@ if [ "$DEFAULT_RUN_MODE" = "mcp-server" ]; then
     python agents/mcp_server.py
 else
   UVICORN_APP="${UVICORN_APP:-$DEFAULT_UVICORN_APP}"
+  if [ -n "$WORKDIR_OVERRIDE" ]; then
+    cd "$WORKDIR_OVERRIDE"
+  fi
   UVICORN_HOST="${UVICORN_HOST:-0.0.0.0}"
   UVICORN_PORT="${UVICORN_PORT:-8000}"
   UVICORN_RELOAD="${UVICORN_RELOAD:-1}"
