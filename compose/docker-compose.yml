@@ -22,6 +22,23 @@ services:
       UPLOAD_TTL_SECONDS: 604800
     ports:
       - 8000:8000
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - |
+          python3 - <<'PY'
+          import sys, urllib.request
+          host = "127.0.0.1"; port = int(${UVICORN_PORT:-8000}); path = "/health"
+          try:
+              with urllib.request.urlopen(f"http://{host}:{port}{path}", timeout=5) as r:
+                  sys.exit(0 if r.status == 200 else 1)
+          except Exception:
+              sys.exit(1)
+          PY
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
   rest-api-dev:
     image: ghcr.io/stefanelul2000/ethical-hacking-apps-docker:rest-api-dev
     container_name: eha-rest-api-dev
@@ -43,6 +60,23 @@ services:
       UPLOAD_TTL_SECONDS: 604800
     ports:
       - 8005:8000
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - |
+          python3 - <<'PY'
+          import sys, urllib.request
+          host = "127.0.0.1"; port = int(${UVICORN_PORT:-8000}); path = "/health"
+          try:
+              with urllib.request.urlopen(f"http://{host}:{port}{path}", timeout=5) as r:
+                  sys.exit(0 if r.status == 200 else 1)
+          except Exception:
+              sys.exit(1)
+          PY
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
 
   ai-mcp-client-prod:
     image: ghcr.io/stefanelul2000/ethical-hacking-apps-docker:ai-mcp-client-prod
@@ -61,6 +95,23 @@ services:
       GROQ_API_KEY: CHANGE_ME
     ports:
       - 8001:8000
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - |
+          python3 - <<'PY'
+          import sys, urllib.request
+          host = "127.0.0.1"; port = int(${UVICORN_PORT:-8000}); path = "/health"
+          try:
+              with urllib.request.urlopen(f"http://{host}:{port}{path}", timeout=5) as r:
+                  sys.exit(0 if r.status == 200 else 1)
+          except Exception:
+              sys.exit(1)
+          PY
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
 
   ai-mcp-client-dev:
     image: ghcr.io/stefanelul2000/ethical-hacking-apps-docker:ai-mcp-client-dev
@@ -79,6 +130,23 @@ services:
       GROQ_API_KEY: CHANGE_ME
     ports:
       - 8002:8000
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - |
+          python3 - <<'PY'
+          import sys, urllib.request
+          host = "127.0.0.1"; port = int(${UVICORN_PORT:-8000}); path = "/health"
+          try:
+              with urllib.request.urlopen(f"http://{host}:{port}{path}", timeout=5) as r:
+                  sys.exit(0 if r.status == 200 else 1)
+          except Exception:
+              sys.exit(1)
+          PY
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
 
   ai-mcp-server-prod:
     image: ghcr.io/stefanelul2000/ethical-hacking-apps-docker:ai-mcp-server-prod
@@ -145,6 +213,23 @@ services:
     working_dir: /srv/app/ai/iris
     ports:
       - 8101:8001
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - |
+          python3 - <<'PY'
+          import sys, urllib.request
+          host = "127.0.0.1"; port = int(${UVICORN_PORT:-8001}); path = "/"
+          try:
+              with urllib.request.urlopen(f"http://{host}:{port}{path}", timeout=5) as r:
+                  sys.exit(0 if 200 <= r.status < 500 else 1)
+          except Exception:
+              sys.exit(1)
+          PY
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
 
   iris-dev:
     image: ghcr.io/stefanelul2000/ethical-hacking-apps-docker:iris-dev
@@ -159,3 +244,20 @@ services:
     working_dir: /srv/app/ai/iris
     ports:
       - 8102:8001
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - |
+          python3 - <<'PY'
+          import sys, urllib.request
+          host = "127.0.0.1"; port = int(${UVICORN_PORT:-8001}); path = "/"
+          try:
+              with urllib.request.urlopen(f"http://{host}:{port}{path}", timeout=5) as r:
+                  sys.exit(0 if 200 <= r.status < 500 else 1)
+          except Exception:
+              sys.exit(1)
+          PY
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
