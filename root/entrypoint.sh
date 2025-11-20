@@ -132,6 +132,12 @@ else
   PY_SPEC="${UV_PYTHON_SPEC:-python3.10}"
 fi
 
+VENV_PATH="${PROJECT_DIR}/.venv"
+
+if [ ! -f "${VENV_PATH}/bin/activate" ]; then
+  uv venv --python "$PY_SPEC" "${VENV_PATH}"
+fi
+
 if [ -f "uv.lock" ] || [ -f "pyproject.toml" ]; then
   if [ -f "uv.lock" ]; then
     uv sync --python "$PY_SPEC" --frozen
@@ -139,14 +145,12 @@ if [ -f "uv.lock" ] || [ -f "pyproject.toml" ]; then
     uv sync --python "$PY_SPEC"
   fi
 elif [ -f "requirements.txt" ]; then
-  uv venv --python "$PY_SPEC"
   uv pip install --python "$PY_SPEC" -r requirements.txt
 elif [ -f "${APP_DIR}/requirements.txt" ]; then
-  uv venv --python "$PY_SPEC"
   uv pip install --python "$PY_SPEC" -r "${APP_DIR}/requirements.txt"
 fi
 
-. ".venv/bin/activate"
+. "${VENV_PATH}/bin/activate"
 
 if [ "$DEFAULT_RUN_MODE" = "mcp-server" ]; then
   MCP_SERVER_TRANSPORT="${MCP_SERVER_TRANSPORT:-http}"
