@@ -134,7 +134,7 @@ fi
 
 VENV_PATH="${PROJECT_DIR}/.venv"
 
-if [ ! -f "${VENV_PATH}/bin/activate" ]; then
+if [ ! -d "${VENV_PATH}" ]; then
   uv venv --python "$PY_SPEC" "${VENV_PATH}"
 fi
 
@@ -150,7 +150,10 @@ elif [ -f "${APP_DIR}/requirements.txt" ]; then
   uv pip install --python "$PY_SPEC" -r "${APP_DIR}/requirements.txt"
 fi
 
-. "${VENV_PATH}/bin/activate"
+# Ensure venv tools are on PATH without relying on activate (avoids OSTYPE under set -u)
+OSTYPE=${OSTYPE:-linux}
+export PATH="${VENV_PATH}/bin:${PATH}"
+export VIRTUAL_ENV="${VENV_PATH}"
 
 if [ "$DEFAULT_RUN_MODE" = "mcp-server" ]; then
   MCP_SERVER_TRANSPORT="${MCP_SERVER_TRANSPORT:-http}"
