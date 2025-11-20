@@ -11,22 +11,26 @@ case "$SERVICE_VARIANT" in
     DEFAULT_PROJECT_SUBDIR="rest-api"
     DEFAULT_RUN_MODE="uvicorn"
     DEFAULT_UVICORN_APP="main:app"
+    DEFAULT_UVICORN_PORT="8000"
     ;;
   mcp-client)
     DEFAULT_PROJECT_SUBDIR="ai"
     DEFAULT_RUN_MODE="uvicorn"
     DEFAULT_UVICORN_APP="agents.mcp_client:app"
+    DEFAULT_UVICORN_PORT="8000"
     ;;
   mcp-server)
     DEFAULT_PROJECT_SUBDIR="ai"
     DEFAULT_RUN_MODE="mcp-server"
     DEFAULT_UVICORN_APP=""
+    DEFAULT_UVICORN_PORT="8001"
     ;;
   iris)
     DEFAULT_PROJECT_SUBDIR="ai"
     DEFAULT_WORKDIR_OVERRIDE="${APP_DIR%/}/ai/iris"
     DEFAULT_RUN_MODE="uvicorn"
     DEFAULT_UVICORN_APP="iris:iris"
+    DEFAULT_UVICORN_PORT="8001"
     ;;
   *)
     echo "Unknown SERVICE_VARIANT '${SERVICE_VARIANT}'" >&2
@@ -173,7 +177,7 @@ else
     cd "$WORKDIR_OVERRIDE"
   fi
   UVICORN_HOST="${UVICORN_HOST:-0.0.0.0}"
-  UVICORN_PORT="${UVICORN_PORT:-8000}"
+  UVICORN_PORT="${UVICORN_PORT:-$DEFAULT_UVICORN_PORT}"
   UVICORN_RELOAD="${UVICORN_RELOAD:-1}"
 
   set -- uvicorn "$UVICORN_APP" --host "$UVICORN_HOST" --port "$UVICORN_PORT"

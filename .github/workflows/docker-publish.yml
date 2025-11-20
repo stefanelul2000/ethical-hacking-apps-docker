@@ -78,7 +78,7 @@ jobs:
             exposed_port: 8001
             health_path: "/"
             healthcheck: true
-            smoke_env: "-e SERVICE_VARIANT=iris"
+            smoke_env: "-e SERVICE_VARIANT=iris -e UVICORN_PORT=8001"
           - image_tag: iris-dev
             extra_tag: ""
             repo_branch: arh
@@ -86,7 +86,7 @@ jobs:
             exposed_port: 8001
             health_path: "/"
             healthcheck: true
-            smoke_env: "-e SERVICE_VARIANT=iris"
+            smoke_env: "-e SERVICE_VARIANT=iris -e UVICORN_PORT=8001"
 
     steps:
       - name: Checkout repository
