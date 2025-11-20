@@ -61,16 +61,16 @@ jobs:
             service_variant: mcp-server
             exposed_port: 8001
             health_path: ""
-            healthcheck: false
-            smoke_env: ""
+            healthcheck: true
+            smoke_env: "-e SERVICE_VARIANT=mcp-server"
           - image_tag: ai-mcp-server-dev
             extra_tag: ""
             repo_branch: arh
             service_variant: mcp-server
             exposed_port: 8001
             health_path: ""
-            healthcheck: false
-            smoke_env: ""
+            healthcheck: true
+            smoke_env: "-e SERVICE_VARIANT=mcp-server"
           - image_tag: iris-prod
             extra_tag: ""
             repo_branch: master
@@ -78,7 +78,7 @@ jobs:
             exposed_port: 8001
             health_path: "/"
             healthcheck: true
-            smoke_env: ""
+            smoke_env: "-e SERVICE_VARIANT=iris"
           - image_tag: iris-dev
             extra_tag: ""
             repo_branch: arh
@@ -86,7 +86,7 @@ jobs:
             exposed_port: 8001
             health_path: "/"
             healthcheck: true
-            smoke_env: ""
+            smoke_env: "-e SERVICE_VARIANT=iris"
 
     steps:
       - name: Checkout repository
@@ -175,10 +175,18 @@ jobs:
               cleanup
               exit 1
             fi
-            if curl --silent --fail --max-time 5 "http://127.0.0.1:${TEST_PORT}${HEALTH_PATH}" > /tmp/health.json; then
-              cat /tmp/health.json
-              SUCCESS=1
-              break
+            if [ -z "${HEALTH_PATH}" ]; then
+              # No HTTP health endpoint; consider success if container is still running after 5s
+              if [ "${attempt}" -ge 5 ]; then
+                SUCCESS=1
+                break
+              fi
+            else
+              if curl --silent --fail --max-time 5 "http://127.0.0.1:${TEST_PORT}${HEALTH_PATH}" > /tmp/health.json; then
+                cat /tmp/health.json
+                SUCCESS=1
+                break
+              fi
             fi
             echo "Health check not ready yet (attempt ${attempt}/20) ..."
             sleep 3
