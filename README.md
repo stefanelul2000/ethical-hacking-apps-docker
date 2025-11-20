@@ -23,16 +23,10 @@ The provided `docker-compose.yml` spins up five services:
 - `ai-mcp-server-prod` / `ai-mcp-server-dev` – MCP server on `master` / `arh`.
 - `iris-prod` / `iris-dev` – Iris FastAPI service running from `ai/iris` (`master` / `arh`; internal port 8001, mapped to 8101/8102 by default).
 
-Environment variables set in the compose file ensure the entrypoint runs the
-correct variant. Update secrets such as `GROQ_API_KEY`, `MCP_ADMIN_*`, and the
-upload credentials before running:
-
-```bash
-docker compose up -d
-```
-
-Refer to `docker-compose.yml` for the exact environment variables used in each
-service and adjust them for your deployment.
+Environment variables in `compose/docker-compose.yml` ensure the entrypoint runs
+the correct variant. Update secrets such as `GROQ_API_KEY`, `MCP_ADMIN_*`, and the
+upload credentials before running. See `compose/README.md` for service-by-service
+details, ports, and volume mapping options.
 
 If you prefer to run a single container manually:
 
