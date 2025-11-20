@@ -8,8 +8,8 @@ variable:
 | Variant      | Repo branch default | Entry point                            |
 |--------------|--------------------|----------------------------------------|
 | `rest-api`   | `master` / `arh`   | `uvicorn main:app`                     |
-| `mcp-client` | `master`           | `uvicorn agents.mcp_client:app`        |
-| `mcp-server` | `master`           | `python agents/mcp_server.py`          |
+| `mcp-client` | `master` / `arh`   | `uvicorn agents.mcp_client:app`        |
+| `mcp-server` | `master` / `arh`   | `python agents/mcp_server.py`          |
 | `iris`       | `master` / `arh`   | `uvicorn iris:iris` (cwd `ai/iris`)    |
 
 You can override `REPO_BRANCH` if you want to pin a different revision.
@@ -21,7 +21,7 @@ The provided `docker-compose.yml` spins up five services:
 - `rest-api-prod` / `rest-api-dev` – REST API on `master` / `arh`.
 - `ai-mcp-client-prod` / `ai-mcp-client-dev` – MCP client on `master` / `arh`.
 - `ai-mcp-server-prod` / `ai-mcp-server-dev` – MCP server on `master` / `arh`.
-- `iris-prod` / `iris-dev` – Iris FastAPI service running from `ai/iris` (`master` / `arh`; internal port 8001, mapped to 8101 by default).
+- `iris-prod` / `iris-dev` – Iris FastAPI service running from `ai/iris` (`master` / `arh`; internal port 8001, mapped to 8101/8102 by default).
 
 Environment variables set in the compose file ensure the entrypoint runs the
 correct variant. Update secrets such as `GROQ_API_KEY`, `MCP_ADMIN_*`, and the

@@ -1,9 +1,9 @@
 version: "3.9"
 
 services:
-  rest-api:
-    image: ghcr.io/stefanelul2000/ethical-hacking-apps-docker:main
-    container_name: ethical-hacking-rest-api-prod
+  rest-api-prod:
+    image: ghcr.io/stefanelul2000/ethical-hacking-apps-docker:rest-api-prod
+    container_name: eha-rest-api-prod
     restart: unless-stopped
     environment:
       SERVICE_VARIANT: rest-api
@@ -22,10 +22,31 @@ services:
       UPLOAD_TTL_SECONDS: 604800
     ports:
       - 8000:8000
+  rest-api-dev:
+    image: ghcr.io/stefanelul2000/ethical-hacking-apps-docker:rest-api-dev
+    container_name: eha-rest-api-dev
+    restart: unless-stopped
+    environment:
+      SERVICE_VARIANT: rest-api
+      REPO_URL: https://github.com/stefanelul2000/ethical-hacking-apps.git
+      REPO_BRANCH: arh
+      PROJECT_SUBDIR: rest-api
+      UVICORN_HOST: 0.0.0.0
+      UVICORN_PORT: 8000
+      UVICORN_RELOAD: "0"
+      UPLOAD_BASIC_AUTH_USERNAME: uploader
+      UPLOAD_BASIC_AUTH_PASSWORD: upload-secret
+      UPLOAD_MAX_STORAGE_PER_USER: 52428800
+      UPLOAD_MAX_STORAGE_GLOBAL: 524288000
+      UPLOAD_RATE_WINDOW_SECONDS: 60
+      UPLOAD_RATE_MAX_REQUESTS: 30
+      UPLOAD_TTL_SECONDS: 604800
+    ports:
+      - 8005:8000
 
-  ai-mcp-client-master:
-    image: ghcr.io/stefanelul2000/ethical-hacking-apps-docker:ai-mcp-client-master
-    container_name: ethical-hacking-mcp-client-prod
+  ai-mcp-client-prod:
+    image: ghcr.io/stefanelul2000/ethical-hacking-apps-docker:ai-mcp-client-prod
+    container_name: eha-mcp-client-prod
     restart: unless-stopped
     environment:
       SERVICE_VARIANT: mcp-client
@@ -41,9 +62,9 @@ services:
     ports:
       - 8001:8000
 
-  ai-mcp-client-arh:
-    image: ghcr.io/stefanelul2000/ethical-hacking-apps-docker:ai-mcp-client-arh
-    container_name: ethical-hacking-mcp-client-dev
+  ai-mcp-client-dev:
+    image: ghcr.io/stefanelul2000/ethical-hacking-apps-docker:ai-mcp-client-dev
+    container_name: eha-mcp-client-dev
     restart: unless-stopped
     environment:
       SERVICE_VARIANT: mcp-client
@@ -59,9 +80,9 @@ services:
     ports:
       - 8002:8000
 
-  ai-mcp-server-master:
-    image: ghcr.io/stefanelul2000/ethical-hacking-apps-docker:ai-mcp-server-master
-    container_name: ethical-hacking-mcp-server-prod
+  ai-mcp-server-prod:
+    image: ghcr.io/stefanelul2000/ethical-hacking-apps-docker:ai-mcp-server-prod
+    container_name: eha-mcp-server-prod
     restart: unless-stopped
     environment:
       SERVICE_VARIANT: mcp-server
@@ -71,9 +92,9 @@ services:
     ports:
       - 8003:8001
 
-  ai-mcp-server-arh:
-    image: ghcr.io/stefanelul2000/ethical-hacking-apps-docker:ai-mcp-server-arh
-    container_name: ethical-hacking-mcp-server-dev
+  ai-mcp-server-dev:
+    image: ghcr.io/stefanelul2000/ethical-hacking-apps-docker:ai-mcp-server-dev
+    container_name: eha-mcp-server-dev
     restart: unless-stopped
     environment:
       SERVICE_VARIANT: mcp-server
@@ -83,9 +104,9 @@ services:
     ports:
       - 8004:8001
 
-  iris:
-    image: ghcr.io/stefanelul2000/ethical-hacking-apps-docker:iris
-    container_name: ethical-hacking-iris
+  iris-prod:
+    image: ghcr.io/stefanelul2000/ethical-hacking-apps-docker:iris-prod
+    container_name: eha-iris-prod
     restart: unless-stopped
     environment:
       SERVICE_VARIANT: iris
@@ -94,3 +115,15 @@ services:
     working_dir: /srv/app/ai/iris
     ports:
       - 8101:8001
+
+  iris-dev:
+    image: ghcr.io/stefanelul2000/ethical-hacking-apps-docker:iris-dev
+    container_name: eha-iris-dev
+    restart: unless-stopped
+    environment:
+      SERVICE_VARIANT: iris
+      REPO_URL: https://github.com/stefanelul2000/ethical-hacking-apps.git
+      REPO_BRANCH: arh
+    working_dir: /srv/app/ai/iris
+    ports:
+      - 8102:8001
