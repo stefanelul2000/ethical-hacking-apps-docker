@@ -91,6 +91,20 @@ services:
       ENABLE_MCP_COMMAND_TOOL: "0"
     ports:
       - 8003:8001
+    healthcheck:
+      test:
+        - CMD
+        - python3
+        - -c
+        - >
+          import socket,sys;
+          host='127.0.0.1';
+          port=int('${MCP_SERVER_PORT:-8001}');
+          sys.exit(0) if socket.create_connection((host, port), timeout=5) else sys.exit(1)
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
 
   ai-mcp-server-dev:
     image: ghcr.io/stefanelul2000/ethical-hacking-apps-docker:ai-mcp-server-dev
@@ -103,6 +117,20 @@ services:
       ENABLE_MCP_COMMAND_TOOL: "0"
     ports:
       - 8004:8001
+    healthcheck:
+      test:
+        - CMD
+        - python3
+        - -c
+        - >
+          import socket,sys;
+          host='127.0.0.1';
+          port=int('${MCP_SERVER_PORT:-8001}');
+          sys.exit(0) if socket.create_connection((host, port), timeout=5) else sys.exit(1)
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
 
   iris-prod:
     image: ghcr.io/stefanelul2000/ethical-hacking-apps-docker:iris-prod
