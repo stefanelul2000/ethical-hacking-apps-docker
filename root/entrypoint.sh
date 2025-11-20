@@ -29,7 +29,7 @@ case "$SERVICE_VARIANT" in
     DEFAULT_PROJECT_SUBDIR="ai"
     DEFAULT_WORKDIR_OVERRIDE="${APP_DIR%/}/ai/iris"
     DEFAULT_RUN_MODE="uvicorn"
-    DEFAULT_UVICORN_APP="iris:iris"
+    DEFAULT_UVICORN_APP="iris:app"
     DEFAULT_UVICORN_PORT="8001"
     ;;
   *)
